@@ -5,25 +5,43 @@ from bs4 import BeautifulSoup
 
 app = FastAPI()
 
-@app.get("/scrape")   # ❗ ini penting, JANGAN tulis /api/scrape
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+}
+
+@app.get("/scrape")
 def scrape(url: str):
-    headers = {"User-Agent": "Mozilla/5.0"}
-    r = requests.get(url, headers=headers)
-    soup = BeautifulSoup(r.text, "html.parser")
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=10)
 
-    title = soup.select_one("#productTitle")
-    price = soup.select_one(".a-price .a-offscreen")
-    image = soup.select_one("#landingImage")
-    rating = soup.select_one("i.a-icon-star span")
+        # Jika Amazon block → HTML jadi kosong
+        if len(r.text) < 5000:
+            return {"error": "Amazon blocked the request. Vercel IP is banned."}
 
-    return {
-        "title": title.get_text(strip=True) if title else None,
-        "price": price.get_text(strip=True) if price else None,
-        "image": image.get("src") if image else None,
-        "rating": rating.get_text(strip=True) if rating else None,
-        "url": url
-    }
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        def safe(sel, attr=None):
+            el = soup.select_one(sel)
+            if not el: return None
+            return el.get(attr) if attr else el.get_text(strip=True)
+
+        data = {
+            "title": safe("#productTitle"),
+            "price": safe(".a-price .a-offscreen"),
+            "image": safe("#landingImage", "src"),
+            "rating": safe("i.a-icon-star span"),
+            "url": url
+        }
+
+        return data
+
+    except Exception as e:
+        # Supaya Vercel tidak 404 → kita balikan error JSON
+        return {"error": str(e)}
+
 
 @app.get("/")
 def root():
-    return {"status": "API is running"}
+    return {"status": "API OK"}
