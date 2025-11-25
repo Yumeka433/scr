@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Amazon Scraper</title>
+</head>
+<body>
+<h2>Amazon Product Scraper</h2>
+
+<input id="urlInput" type="text" placeholder="Masukkan URL Amazon" style="width:300px">
+<button onclick="scrape()">Scrape</button>
+
+<pre id="output"></pre>
+
+<script>
+async function scrape() {
+    const url = document.getElementById("urlInput").value;
+    const res = await fetch(`/api/scrape?url=` + encodeURIComponent(url));
+    const data = await res.json();
+    document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+}
+</script>
+
+</body>
+</html>
