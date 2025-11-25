@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 import requests
 from bs4 import BeautifulSoup
 
 app = FastAPI()
 
-@app.get("/scrape")
-def scrape(url: str = Query(...)):
+@app.get("/scrape")   # ❗ ini penting, JANGAN tulis /api/scrape
+def scrape(url: str):
     headers = {"User-Agent": "Mozilla/5.0"}
     r = requests.get(url, headers=headers)
     soup = BeautifulSoup(r.text, "html.parser")
@@ -24,7 +24,6 @@ def scrape(url: str = Query(...)):
         "url": url
     }
 
-# untuk root endpoint (opsional)
-@app.get("/", response_class=HTMLResponse)
-def home():
-    return "<h1>FastAPI berjalan di Vercel</h1>"
+@app.get("/")
+def root():
+    return {"status": "API is running"}
