@@ -123,24 +123,27 @@ async function searchBooks(query) {
     const res = await fetch("https://scr-rose.vercel.app/api/books?q=" + encodeURIComponent(query));
     let data = await res.json();
 
-    if (!data.items || data.items.length === 0) {
+    // API kamu mengembalikan data.books
+    if (!data.books || data.books.length === 0) {
         document.getElementById("highlight").innerHTML = "<p>Tidak ada hasil.</p>";
         document.getElementById("others").innerHTML = "";
         document.getElementById("others-title").style.display = "none";
         return;
     }
 
-    const big = data.items[0];
-    const others = data.items.slice(1);
+    const big = data.books[0];
+    const others = data.books.slice(1);
 
+    // ------------------ CARD BESAR ------------------
     document.getElementById("highlight").innerHTML = `
         <div class="big-card">
-            <img src="${big.cover}" />
+            <img src="${big.thumbnail || ''}" />
             <div class="title">${big.title}</div>
             <div class="desc">${big.description || "Tidak ada deskripsi."}</div>
         </div>
     `;
 
+    // ------------------ CARD KECIL ------------------
     const othersContainer = document.getElementById("others");
     othersContainer.innerHTML = "";
 
@@ -151,10 +154,12 @@ async function searchBooks(query) {
     others.forEach(b => {
         othersContainer.innerHTML += `
             <div class="small-card">
-                <img src="${b.cover}" />
+                <img src="${b.thumbnail || ''}" />
                 <div class="small-info">
                     <div class="title">${b.title}</div>
-                    <div class="desc">${b.description ? b.description.slice(0, 75) + "..." : "Tidak ada deskripsi."}</div>
+                    <div class="desc">
+                        ${(b.description || "Tidak ada deskripsi.").slice(0, 75)}...
+                    </div>
                 </div>
             </div>
         `;
@@ -167,6 +172,5 @@ function triggerSearch() {
     searchBooks(q);
 }
 </script>
-
 </body>
 </html>
