@@ -46,6 +46,7 @@
         border-radius: 18px;
         padding: 15px;
         margin-bottom: 25px;
+        cursor: pointer;
     }
 
     .big-card img {
@@ -72,6 +73,7 @@
         padding: 10px;
         margin-bottom: 15px;
         gap: 10px;
+        cursor: pointer;
     }
 
     .small-card img {
@@ -123,7 +125,6 @@ async function searchBooks(query) {
     const res = await fetch("https://scr-rose.vercel.app/api/books?q=" + encodeURIComponent(query));
     let data = await res.json();
 
-    // API kamu mengembalikan data.books
     if (!data.books || data.books.length === 0) {
         document.getElementById("highlight").innerHTML = "<p>Tidak ada hasil.</p>";
         document.getElementById("others").innerHTML = "";
@@ -134,16 +135,15 @@ async function searchBooks(query) {
     const big = data.books[0];
     const others = data.books.slice(1);
 
-    // ------------------ CARD BESAR ------------------
     document.getElementById("highlight").innerHTML = `
-        <div class="big-card">
+        <div class="big-card"
+            onclick="openDetail('${encodeURIComponent(big.title)}','${encodeURIComponent(big.description || "")}','${encodeURIComponent(big.thumbnail)}')">
             <img src="${(big.thumbnail || '').replace('zoom=1','zoom=3')}" />
             <div class="title">${big.title}</div>
             <div class="desc">${big.description || "Tidak ada deskripsi."}</div>
         </div>
     `;
 
-    // ------------------ CARD KECIL ------------------
     const othersContainer = document.getElementById("others");
     othersContainer.innerHTML = "";
 
@@ -153,13 +153,12 @@ async function searchBooks(query) {
 
     others.forEach(b => {
         othersContainer.innerHTML += `
-            <div class="small-card">
+            <div class="small-card"
+                onclick="openDetail('${encodeURIComponent(b.title)}','${encodeURIComponent(b.description || "")}','${encodeURIComponent(b.thumbnail)}')">
                 <img src="${(b.thumbnail || '').replace('zoom=1','zoom=3')}" />
                 <div class="small-info">
                     <div class="title">${b.title}</div>
-                    <div class="desc">
-                        ${(b.description || "Tidak ada deskripsi.").slice(0, 75)}...
-                    </div>
+                    <div class="desc">${(b.description || "Tidak ada deskripsi.").slice(0,75)}...</div>
                 </div>
             </div>
         `;
@@ -171,6 +170,14 @@ function triggerSearch() {
     if (q.length < 1) return;
     searchBooks(q);
 }
+
+function openDetail(title, desc, thumb) {
+    window.location.href =
+        "detail.html?title=" + title +
+        "&description=" + desc +
+        "&thumbnail=" + thumb;
+}
 </script>
+
 </body>
 </html>
