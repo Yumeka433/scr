@@ -5,13 +5,10 @@ app = FastAPI()
 
 GOOGLE_BOOKS = "https://www.googleapis.com/books/v1/volumes"
 
-
-@app.get("/books")
-async def search_books(q: str = Query(..., description="Keyword pencarian buku")):
-    params = {"q": q, "maxResults": 5}
-
+@app.get("/api/books")
+async def search_books(q: str = Query(...)):
     async with httpx.AsyncClient() as client:
-        r = await client.get(GOOGLE_BOOKS, params=params)
+        r = await client.get(GOOGLE_BOOKS, params={"q": q, "maxResults": 5})
 
     data = r.json()
 
@@ -31,8 +28,6 @@ async def search_books(q: str = Query(..., description="Keyword pencarian buku")
             "publishedDate": info.get("publishedDate"),
             "description": info.get("description"),
             "thumbnail": info.get("imageLinks", {}).get("thumbnail"),
-
-            # download PDF & EPUB available only for some books
             "download_links": {
                 "pdf": access.get("pdf", {}).get("downloadLink"),
                 "epub": access.get("epub", {}).get("downloadLink"),
