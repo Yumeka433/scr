@@ -3,192 +3,173 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<title>Book Finder - Tokopedia Style</title>
+<title>Book Search</title>
 
 <style>
-    :root {
-        --bg: #f4f4f4;
-        --card: #ffffff;
-        --text: #111;
-        --subtext: #555;
-    }
-
-    /* Dark Mode */
-    @media (prefers-color-scheme: dark) {
-        :root {
-            --bg: #0f0f0f;
-            --card: #1a1a1a;
-            --text: #fff;
-            --subtext: #ccc;
-        }
-    }
-
     body {
-        font-family: Arial;
+        font-family: Arial, sans-serif;
+        background: #0e0e0e;
+        color: white;
         margin: 0;
-        padding: 20px;
-        background: var(--bg);
-        color: var(--text);
+        padding: 15px;
     }
 
-    .container {
-        max-width: 1000px;
-        margin: auto;
+    .search-box {
+        width: 100%;
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
     }
 
     input {
         width: 100%;
         padding: 12px;
-        border-radius: 8px;
-        border: 1px solid #555;
-        background: var(--card);
-        color: var(--text);
-        margin-bottom: 20px;
+        border-radius: 10px;
+        border: none;
+        background: #1c1c1c;
+        color: white;
         font-size: 16px;
     }
 
-    /* --- HERO SECTION (Sering Dibaca) --- */
-    .hero-wrapper {
-        display: flex;
-        gap: 20px;
-        overflow-x: auto;
-        padding-bottom: 20px;
+    button {
+        padding: 12px 16px;
+        border: none;
+        border-radius: 10px;
+        background: #4a7dff;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
     }
 
-    .hero-card {
-        flex: 0 0 350px;
-        background: var(--card);
-        border-radius: 14px;
+    /* ---------------------- CARD BESAR ---------------------- */
+    .big-card {
+        background: #1a1a1a;
+        border-radius: 18px;
         padding: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin-bottom: 25px;
     }
 
-    .hero-card img {
+    .big-card img {
         width: 100%;
-        border-radius: 12px;
-        height: 260px;
-        object-fit: cover;
+        border-radius: 14px;
+        margin-bottom: 10px;
     }
 
-    .hero-card h2 {
-        margin: 10px 0 5px 0;
-        font-size: 20px;
-    }
-
-    .hero-card p {
-        font-size: 14px;
-        color: var(--subtext);
-    }
-
-    /* --- NORMAL GRID --- */
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .book-card {
-        background: var(--card);
-        border-radius: 12px;
-        padding: 12px;
-        text-align: center;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-    }
-
-    .book-card img {
-        width: 100%;
-        height: 180px;
-        border-radius: 8px;
-        object-fit: cover;
-        margin-bottom: 8px;
-    }
-
-    .book-card h4 {
-        font-size: 15px;
+    .big-card .title {
+        font-size: 22px;
+        font-weight: bold;
         margin-bottom: 6px;
     }
 
-    .book-card small {
-        color: var(--subtext);
+    .big-card .desc {
+        font-size: 14px;
+        opacity: 0.8;
     }
 
-    a {
-        color: #4aacff;
+    /* ---------------------- CARD KECIL ---------------------- */
+    .small-card {
+        display: flex;
+        background: #1a1a1a;
+        border-radius: 15px;
+        padding: 10px;
+        margin-bottom: 15px;
+        gap: 10px;
+    }
+
+    .small-card img {
+        width: 80px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 12px;
+    }
+
+    .small-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .small-info .title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .small-info .desc {
+        font-size: 13px;
+        opacity: 0.8;
+    }
+
+    .section-title {
+        margin: 20px 0 10px;
+        font-size: 20px;
+        font-weight: bold;
     }
 </style>
 </head>
+
 <body>
 
-<div class="container">
-
-    <h2>📚 Cari Buku</h2>
-    <input id="search" placeholder="Contoh: harry potter, novel, programming..." />
-
-    <h3>🔥 Sering Dibaca</h3>
-    <div id="hero" class="hero-wrapper"></div>
-
-    <h3>📘 Semua Buku</h3>
-    <div id="grid" class="grid"></div>
-
+<div class="search-box">
+    <input id="searchInput" placeholder="Cari buku...">
+    <button onclick="triggerSearch()">Cari</button>
 </div>
 
+<div id="highlight"></div>
+
+<div class="section-title" id="others-title" style="display:none;">Buku Lainnya</div>
+<div id="others"></div>
+
 <script>
-const input = document.getElementById("search");
-const hero = document.getElementById("hero");
-const grid = document.getElementById("grid");
+async function searchBooks(query) {
+    const res = await fetch("/api/books?q=" + encodeURIComponent(query));
+    let data = await res.json();
 
-// generate 3 buku pertama ke Hero Section
-function renderHero(books) {
-    hero.innerHTML = books.slice(0, 3).map(book => `
-        <div class="hero-card">
-            <img src="${book.thumbnail || ''}" alt="cover">
-            <h2>${book.title || "Tanpa Judul"}</h2>
-            <p>${(book.description || "").substring(0, 100)}...</p>
-
-            <p>
-                📥 Download:<br>
-                PDF: ${book.download_links?.pdf ? `<a href="${book.download_links.pdf}" target="_blank">PDF</a>` : "❌"}<br>
-                EPUB: ${book.download_links?.epub ? `<a href="${book.download_links.epub}" target="_blank">EPUB</a>` : "❌"}
-            </p>
-        </div>
-    `).join("");
-}
-
-// generate semua buku ke grid kecil
-function renderGrid(books) {
-    grid.innerHTML = books.map(book => `
-        <div class="book-card">
-            <img src="${book.thumbnail || ''}" alt="cover">
-            <h4>${book.title || "Tanpa Judul"}</h4>
-            <small>${book.authors?.join(", ") || "-"}</small>
-        </div>
-    `).join("");
-}
-
-input.addEventListener("keyup", async () => {
-    const q = input.value.trim();
-    if (!q) {
-        hero.innerHTML = "";
-        grid.innerHTML = "";
+    if (!data.items || data.items.length === 0) {
+        document.getElementById("highlight").innerHTML = "<p>Tidak ada hasil.</p>";
+        document.getElementById("others").innerHTML = "";
+        document.getElementById("others-title").style.display = "none";
         return;
     }
 
-    grid.innerHTML = "Loading...";
+    const big = data.items[0];
+    const others = data.items.slice(1);
 
-    const res = await fetch("/api/books?q=" + encodeURIComponent(q));
-    const data = await res.json();
+    // ------------------ RENDER CARD BESAR ------------------
+    document.getElementById("highlight").innerHTML = `
+        <div class="big-card">
+            <img src="${big.cover}" />
+            <div class="title">${big.title}</div>
+            <div class="desc">${big.description || "Tidak ada deskripsi."}</div>
+        </div>
+    `;
 
-    if (!data.books.length) {
-        grid.innerHTML = "<p>Tidak ada hasil</p>";
-        hero.innerHTML = "";
-        return;
+    // ------------------ RENDER KARTU KECIL ------------------
+    const othersContainer = document.getElementById("others");
+    othersContainer.innerHTML = "";
+
+    if (others.length > 0) {
+        document.getElementById("others-title").style.display = "block";
     }
 
-    renderHero(data.books);
-    renderGrid(data.books);
-});
+    others.forEach(b => {
+        othersContainer.innerHTML += `
+            <div class="small-card">
+                <img src="${b.cover}" />
+                <div class="small-info">
+                    <div class="title">${b.title}</div>
+                    <div class="desc">${b.description ? b.description.slice(0, 75) + "..." : "Tidak ada deskripsi."}</div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function triggerSearch() {
+    const q = document.getElementById("searchInput").value.trim();
+    if (q.length < 1) return;
+    searchBooks(q);
+}
 </script>
 
 </body>
