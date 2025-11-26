@@ -1,183 +1,228 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Book Search</title>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Scr-Rose - Pencarian Buku</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #0e0e0e;
-        color: white;
-        margin: 0;
-        padding: 15px;
-    }
-
-    .search-box {
-        width: 100%;
-        margin-bottom: 20px;
-        display: flex;
-        gap: 10px;
-    }
-
-    input {
-        width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        border: none;
-        background: #1c1c1c;
-        color: white;
-        font-size: 16px;
-    }
-
-    button {
-        padding: 12px 16px;
-        border: none;
-        border-radius: 10px;
-        background: #4a7dff;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    .big-card {
-        background: #1a1a1a;
-        border-radius: 18px;
-        padding: 15px;
-        margin-bottom: 25px;
-        cursor: pointer;
-    }
-
-    .big-card img {
-        width: 100%;
-        border-radius: 14px;
-        margin-bottom: 10px;
-    }
-
-    .big-card .title {
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 6px;
-    }
-
-    .big-card .desc {
-        font-size: 14px;
-        opacity: 0.8;
-    }
-
-    .small-card {
-        display: flex;
-        background: #1a1a1a;
-        border-radius: 15px;
-        padding: 10px;
-        margin-bottom: 15px;
-        gap: 10px;
-        cursor: pointer;
-    }
-
-    .small-card img {
-        width: 80px;
-        height: 110px;
-        object-fit: cover;
-        border-radius: 12px;
-    }
-
-    .small-info {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .small-info .title {
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: 4px;
-    }
-
-    .small-info .desc {
-        font-size: 13px;
-        opacity: 0.8;
-    }
-
-    .section-title {
-        margin: 20px 0 10px;
-        font-size: 20px;
-        font-weight: bold;
-    }
+  body { font-family: Arial, sans-serif; margin:0; background:#f6f7fb; color:#111; }
+  header { padding:16px; background:#2b6cff; color:#fff; }
+  .container{max-width:980px;margin:18px auto;padding:0 12px;}
+  .search {display:flex; gap:8px; margin-bottom:14px;}
+  input[type="search"]{flex:1;padding:10px;border-radius:8px;border:1px solid #ccc;}
+  button{padding:10px 14px;border-radius:8px;border:none;background:#2b6cff;color:#fff;cursor:pointer;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+  .card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+  .thumb{width:100%;height:260px;object-fit:cover;border-radius:6px;background:#eee;}
+  .title{font-weight:700;margin:8px 0 6px}
+  .desc{font-size:13px;color:#444;height:44px;overflow:hidden}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .detail-btn{background:#0b63ff;color:#fff;padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
+  /* detail overlay (used when ?detail=... on index) */
+  .detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:40}
+  .detail-card{width:92%;max-width:900px;background:#fff;border-radius:12px;padding:18px;overflow:auto;max-height:90vh}
+  .detail-top{display:flex;gap:16px}
+  .detail-thumb{width:260px;height:340px;object-fit:cover;border-radius:8px;background:#eee}
+  .back{display:inline-block;margin-top:12px;padding:8px 12px;border-radius:8px;border:none;background:#2b6cff;color:#fff;cursor:pointer}
+  .hidden{display:none}
 </style>
 </head>
-
 <body>
+  <header>
+    <div class="container">
+      <h1>Scr-Rose</h1>
+    </div>
+  </header>
 
-<div class="search-box">
-    <input id="searchInput" placeholder="Cari buku...">
-    <button onclick="triggerSearch()">Cari</button>
-</div>
+  <main class="container">
+    <div class="search">
+      <input id="q" type="search" placeholder="Cari judul atau penulis..." />
+      <button id="searchBtn">Cari</button>
+    </div>
 
-<div id="highlight"></div>
+    <div id="results" class="grid"></div>
+    <div id="msg" style="margin-top:12px;color:#666"></div>
+  </main>
 
-<div class="section-title" id="others-title" style="display:none;">Buku Lainnya</div>
-<div id="others"></div>
+  <!-- Detail overlay (dipakai saat URL berisi ?detail=...) -->
+  <div id="detailOverlay" class="detail-overlay hidden" aria-hidden="true">
+    <div class="detail-card" role="dialog" aria-modal="true">
+      <button id="closeDetail" class="back">← Kembali</button>
+      <div id="detailContent" style="margin-top:12px">
+        <div class="detail-top">
+          <img id="detailThumb" class="detail-thumb" alt="thumbnail" />
+          <div style="flex:1">
+            <h2 id="detailTitle"></h2>
+            <p id="detailDesc" style="white-space:pre-wrap;color:#333"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-async function searchBooks(query) {
-    const res = await fetch("https://scr-rose.vercel.app/api/books?q=" + encodeURIComponent(query));
-    let data = await res.json();
+(function(){
+  const API_ENDPOINT = "https://scr-rose.vercel.app/api/books?q="; // tetap pakai endpoint yang ada
+  const qInput = document.getElementById("q");
+  const results = document.getElementById("results");
+  const msg = document.getElementById("msg");
+  const searchBtn = document.getElementById("searchBtn");
 
-    if (!data.books || data.books.length === 0) {
-        document.getElementById("highlight").innerHTML = "<p>Tidak ada hasil.</p>";
-        document.getElementById("others").innerHTML = "";
-        document.getElementById("others-title").style.display = "none";
-        return;
+  // util: buat key sessionStorage dari title (encoded)
+  function keyForTitle(title) {
+    return "book-" + encodeURIComponent(title);
+  }
+
+  // tampilkan hasil
+  function renderItems(items) {
+    results.innerHTML = "";
+    if (!items || items.length === 0) {
+      msg.textContent = "Tidak ada hasil.";
+      return;
     }
+    msg.textContent = "";
+    items.forEach(item => {
+      const vol = item.volumeInfo || {};
+      const title = vol.title || "Untitled";
+      const desc = vol.description || "";
+      const thumb = vol.imageLinks?.thumbnail || "";
 
-    const big = data.books[0];
-    const others = data.books.slice(1);
+      const card = document.createElement("div");
+      card.className = "card";
 
-    document.getElementById("highlight").innerHTML = `
-        <div class="big-card"
-            onclick="openDetail('${encodeURIComponent(big.title)}','${encodeURIComponent(big.description || "")}','${encodeURIComponent(big.thumbnail)}')">
-            <img src="${(big.thumbnail || '').replace('zoom=1','zoom=3')}" />
-            <div class="title">${big.title}</div>
-            <div class="desc">${big.description || "Tidak ada deskripsi."}</div>
-        </div>
-    `;
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.alt = title;
+      img.src = thumb ? thumb.replace("zoom=1","zoom=3") : "";
+      card.appendChild(img);
 
-    const othersContainer = document.getElementById("others");
-    othersContainer.innerHTML = "";
+      const t = document.createElement("div"); t.className = "title"; t.textContent = title;
+      card.appendChild(t);
 
-    if (others.length > 0) {
-        document.getElementById("others-title").style.display = "block";
-    }
+      const d = document.createElement("div"); d.className = "desc"; d.textContent = desc;
+      card.appendChild(d);
 
-    others.forEach(b => {
-        othersContainer.innerHTML += `
-            <div class="small-card"
-                onclick="openDetail('${encodeURIComponent(b.title)}','${encodeURIComponent(b.description || "")}','${encodeURIComponent(b.thumbnail)}')">
-                <img src="${(b.thumbnail || '').replace('zoom=1','zoom=3')}" />
-                <div class="small-info">
-                    <div class="title">${b.title}</div>
-                    <div class="desc">${(b.description || "Tidak ada deskripsi.").slice(0,75)}...</div>
-                </div>
-            </div>
-        `;
+      const meta = document.createElement("div"); meta.className = "meta";
+      const more = document.createElement("button");
+      more.className = "detail-btn";
+      more.textContent = "Detail";
+      more.onclick = () => openDetail({ title, description: desc, thumbnail: thumb });
+      meta.appendChild(more);
+
+      card.appendChild(meta);
+      results.appendChild(card);
     });
-}
+  }
 
-function triggerSearch() {
-    const q = document.getElementById("searchInput").value.trim();
-    if (q.length < 1) return;
-    searchBooks(q);
-}
+  // fetch results dari API_ENDPOINT
+  async function doSearch(q) {
+    if (!q) { msg.textContent = "Masukkan kata kunci pencarian."; return; }
+    msg.textContent = "Mencari...";
+    results.innerHTML = "";
+    try {
+      const res = await fetch(API_ENDPOINT + encodeURIComponent(q));
+      if (!res.ok) throw new Error("Fetch error");
+      const data = await res.json();
+      renderItems(data.items || []);
+      msg.textContent = "";
+    } catch (e) {
+      msg.textContent = "Gagal mengambil data.";
+      console.error(e);
+    }
+  }
 
-function openDetail(title, desc, thumb) {
-    window.location.href =
-        "detail.html?title=" + title +
-        "&description=" + desc +
-        "&thumbnail=" + thumb;
-}
+  // buka detail: simpan di sessionStorage lalu redirect ke /?detail=<title>
+  function openDetail(book) {
+    if (!book || !book.title) return;
+    const key = keyForTitle(book.title);
+    try {
+      sessionStorage.setItem(key, JSON.stringify(book));
+    } catch (e) {
+      console.warn("sessionStorage full or blocked", e);
+    }
+    // redirect ke root dengan query detail (URL singkat)
+    window.location.href = "/?detail=" + encodeURIComponent(book.title);
+  }
+
+  // -------------------------
+  // DETAIL HANDLER (index sebagai host untuk ?detail=...):
+  // Jika URL memiliki detail param -> baca sessionStorage dan tampilkan overlay detail
+  // -------------------------
+  const detailOverlay = document.getElementById("detailOverlay");
+  const detailTitle = document.getElementById("detailTitle");
+  const detailDesc = document.getElementById("detailDesc");
+  const detailThumb = document.getElementById("detailThumb");
+  const closeDetail = document.getElementById("closeDetail");
+
+  function showDetailFromParam() {
+    const params = new URLSearchParams(window.location.search);
+    const titleID = params.get("detail");
+    if (!titleID) return false;
+
+    const key = keyForTitle(titleID);
+    const raw = sessionStorage.getItem(key);
+    if (!raw) {
+      // tidak ada data di sessionStorage -> tidak bisa tampil detail; redirect ke root tanpa param
+      // (tetap ke "/" agar URL pendek)
+      history.replaceState(null, "", "/");
+      return false;
+    }
+
+    let book;
+    try { book = JSON.parse(raw); } catch(e){ book = null; }
+    if (!book) {
+      history.replaceState(null, "", "/");
+      return false;
+    }
+
+    detailTitle.textContent = book.title || "";
+    detailDesc.textContent = book.description || "Tidak ada deskripsi.";
+    if (book.thumbnail) detailThumb.src = book.thumbnail.replace("zoom=1","zoom=3");
+    else { detailThumb.src = ""; detailThumb.alt = "Thumbnail tidak tersedia"; }
+
+    detailOverlay.classList.remove("hidden");
+    detailOverlay.setAttribute("aria-hidden", "false");
+    return true;
+  }
+
+  closeDetail.addEventListener("click", function(e){
+    e.preventDefault();
+    // jika ada history -> history.back() supaya index state kembali
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // fallback -> hapus param dan tetap di root
+      history.replaceState(null, "", "/");
+      detailOverlay.classList.add("hidden");
+      detailOverlay.setAttribute("aria-hidden", "true");
+    }
+  });
+
+  // Jika pengguna klik di luar kartu (overlay), tutup juga
+  detailOverlay.addEventListener("click", function(ev){
+    if (ev.target === detailOverlay) {
+      closeDetail.click();
+    }
+  });
+
+  // -------------------------
+  // Startup: hook event & handle ?detail
+  // -------------------------
+  searchBtn.addEventListener("click", () => doSearch(qInput.value.trim()));
+  qInput.addEventListener("keydown", (e)=>{ if (e.key === "Enter") doSearch(qInput.value.trim()); });
+
+  // jika ada ?q=... (opsional) prefill & search
+  const params = new URLSearchParams(window.location.search);
+  const qParam = params.get("q");
+  if (qParam) {
+    qInput.value = qParam;
+    doSearch(qParam);
+  }
+
+  // jika ada detail param -> tampilkan overlay detail
+  showDetailFromParam();
+
+})();
 </script>
-
 </body>
 </html>

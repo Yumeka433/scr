@@ -1,94 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Detail Buku</title>
-
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #0e0e0e;
-        color: white;
-        padding: 15px;
-    }
-
-    .card {
-        background: #1a1a1a;
-        padding: 20px;
-        border-radius: 18px;
-    }
-
-    img {
-        width: 100%;
-        border-radius: 14px;
-        margin-bottom: 15px;
-    }
-
-    .title {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-
-    .desc {
-        font-size: 16px;
-        opacity: 0.8;
-    }
-
-    .back {
-        margin-top: 20px;
-        display: inline-block;
-        padding: 10px 15px;
-        background: #4a7dff;
-        border-radius: 10px;
-        color: white;
-        text-decoration: none;
-        cursor: pointer;
-    }
+  body{font-family:Arial,Helvetica,sans-serif;background:#0e0e0e;color:#fff;padding:18px}
+  .card{max-width:900px;margin:0 auto;background:#111;padding:18px;border-radius:12px}
+  img{width:260px;height:340px;object-fit:cover;border-radius:8px;float:left;margin-right:14px}
+  h1{margin-top:0}
+  .back{display:inline-block;margin-top:14px;padding:8px 12px;border-radius:8px;background:#2b6cff;border:none;color:#fff;cursor:pointer}
+  @media(max-width:720px){img{width:100%;height:auto;float:none;margin:0 0 12px}}
 </style>
 </head>
-
 <body>
-
-<div class="card">
-    <img id="thumb" alt="thumbnail">
-    <div id="title" class="title"></div>
-    <div id="desc" class="desc"></div>
-</div>
-
-<a id="backBtn" class="back" href="#">← Kembali</a>
+  <div class="card">
+    <button id="backBtn" class="back">← Kembali</button>
+    <div id="content" style="margin-top:12px">
+      <img id="thumb" alt="thumbnail" />
+      <h1 id="title"></h1>
+      <p id="desc" style="white-space:pre-wrap;color:#ddd"></p>
+    </div>
+  </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const title = decodeURIComponent(params.get("title") || "");
-const description = decodeURIComponent(params.get("description") || "");
-const thumbnail = decodeURIComponent(params.get("thumbnail") || "");
+(function(){
+  function keyForTitle(title) { return "book-" + encodeURIComponent(title); }
 
-document.getElementById("title").textContent = title;
-document.getElementById("desc").textContent = description || "Tidak ada deskripsi.";
+  const params = new URLSearchParams(window.location.search);
+  const titleID = params.get("detail");
 
-if (thumbnail) {
-    try {
-        document.getElementById("thumb").src = thumbnail.replace("zoom=1", "zoom=3");
-    } catch (e) {
-        document.getElementById("thumb").alt = "Thumbnail tidak tersedia";
-    }
-} else {
+  if (!titleID) {
+    // jika tidak ada param -> kembali ke root
+    window.location.href = "/";
+  }
+
+  const raw = sessionStorage.getItem(keyForTitle(titleID));
+  if (!raw) {
+    // tidak ada data -> kembali ke root
+    window.location.href = "/";
+  }
+
+  let book;
+  try { book = JSON.parse(raw); } catch(e) { book = null; }
+
+  if (!book) {
+    window.location.href = "/";
+  }
+
+  document.getElementById("title").textContent = book.title || "";
+  document.getElementById("desc").textContent = book.description || "Tidak ada deskripsi.";
+  if (book.thumbnail) {
+    document.getElementById("thumb").src = book.thumbnail.replace("zoom=1","zoom=3");
+  } else {
     document.getElementById("thumb").alt = "Thumbnail tidak tersedia";
-}
+  }
 
-document.getElementById("backBtn").addEventListener("click", function(e) {
+  document.getElementById("backBtn").addEventListener("click", function(e){
     e.preventDefault();
-
     if (window.history.length > 1) {
-        window.history.back();
+      window.history.back();
     } else {
-        // Fallback tetap ke root "/", bukan "/index.html"
-        window.location.href = "/";
+      window.location.href = "/";
     }
-});
+  });
+})();
 </script>
-
 </body>
 </html>
