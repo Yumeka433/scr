@@ -1,14 +1,8 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/books.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "public/**/*.html",
-      "use": "@vercel/static"
-    }
+    { "src": "api/books.py", "use": "@vercel/python" },
+    { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/books", "dest": "/api/books.py" },
