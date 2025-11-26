@@ -137,7 +137,7 @@ async function searchBooks(query) {
     // ------------------ CARD BESAR ------------------
     document.getElementById("highlight").innerHTML = `
         <div class="big-card">
-            <img src="${big.thumbnail || ''}" />
+            <img src="${(big.thumbnail || '').replace('zoom=1','zoom=3')}" />
             <div class="title">${big.title}</div>
             <div class="desc">${big.description || "Tidak ada deskripsi."}</div>
         </div>
@@ -154,7 +154,7 @@ async function searchBooks(query) {
     others.forEach(b => {
         othersContainer.innerHTML += `
             <div class="small-card">
-                <img src="${b.thumbnail || ''}" />
+                <img src="${(b.thumbnail || '').replace('zoom=1','zoom=3')}" />
                 <div class="small-info">
                     <div class="title">${b.title}</div>
                     <div class="desc">
