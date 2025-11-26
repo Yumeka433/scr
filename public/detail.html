@@ -44,6 +44,7 @@
         border-radius: 10px;
         color: white;
         text-decoration: none;
+        cursor: pointer;
     }
 </style>
 </head>
@@ -51,22 +52,42 @@
 <body>
 
 <div class="card">
-    <img id="thumb">
+    <img id="thumb" alt="thumbnail">
     <div id="title" class="title"></div>
     <div id="desc" class="desc"></div>
 </div>
 
-<a class="back" href="index.html">← Kembali</a>
+<a id="backBtn" class="back" href="#">← Kembali</a>
 
 <script>
 const params = new URLSearchParams(window.location.search);
-const title = decodeURIComponent(params.get("title"));
-const description = decodeURIComponent(params.get("description"));
-const thumbnail = decodeURIComponent(params.get("thumbnail"));
+const title = decodeURIComponent(params.get("title") || "");
+const description = decodeURIComponent(params.get("description") || "");
+const thumbnail = decodeURIComponent(params.get("thumbnail") || "");
 
 document.getElementById("title").textContent = title;
 document.getElementById("desc").textContent = description || "Tidak ada deskripsi.";
-document.getElementById("thumb").src = thumbnail.replace("zoom=1","zoom=3");
+
+if (thumbnail) {
+    try {
+        document.getElementById("thumb").src = thumbnail.replace("zoom=1", "zoom=3");
+    } catch (e) {
+        document.getElementById("thumb").alt = "Thumbnail tidak tersedia";
+    }
+} else {
+    document.getElementById("thumb").alt = "Thumbnail tidak tersedia";
+}
+
+document.getElementById("backBtn").addEventListener("click", function(e) {
+    e.preventDefault();
+
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        // Fallback tetap ke root "/", bukan "/index.html"
+        window.location.href = "/";
+    }
+});
 </script>
 
 </body>
