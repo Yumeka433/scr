@@ -121,9 +121,24 @@
 <div id="others"></div>
 
 <script>
+const API_URL = "https://scr-rose.vercel.app/api/books";
+
+function slugify(title) {
+    return title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-");
+}
+
+function openDetail(title) {
+    localStorage.setItem("lastSearch", document.getElementById("searchInput").value);
+    const slug = slugify(title);
+    window.location.href = "/detail/" + slug;
+}
+
 async function searchBooks(query) {
-    const res = await fetch("https://scr-rose.vercel.app/api/books?q=" + encodeURIComponent(query));
-    let data = await res.json();
+    const res = await fetch(API_URL + "?q=" + encodeURIComponent(query));
+    const data = await res.json();
 
     if (!data.books || data.books.length === 0) {
         document.getElementById("highlight").innerHTML = "<p>Tidak ada hasil.</p>";
@@ -136,9 +151,8 @@ async function searchBooks(query) {
     const others = data.books.slice(1);
 
     document.getElementById("highlight").innerHTML = `
-        <div class="big-card"
-            onclick="openDetail('${encodeURIComponent(big.title)}','${encodeURIComponent(big.description || "")}','${encodeURIComponent(big.thumbnail)}')">
-            <img src="${(big.thumbnail || '').replace('zoom=1','zoom=3')}" />
+        <div class="big-card" onclick="openDetail('${big.title}')">
+            <img src="${(big.thumbnail || "").replace('zoom=1','zoom=3')}" />
             <div class="title">${big.title}</div>
             <div class="desc">${big.description || "Tidak ada deskripsi."}</div>
         </div>
@@ -153,9 +167,8 @@ async function searchBooks(query) {
 
     others.forEach(b => {
         othersContainer.innerHTML += `
-            <div class="small-card"
-                onclick="openDetail('${encodeURIComponent(b.title)}','${encodeURIComponent(b.description || "")}','${encodeURIComponent(b.thumbnail)}')">
-                <img src="${(b.thumbnail || '').replace('zoom=1','zoom=3')}" />
+            <div class="small-card" onclick="openDetail('${b.title}')">
+                <img src="${(b.thumbnail || "").replace('zoom=1','zoom=3')}" />
                 <div class="small-info">
                     <div class="title">${b.title}</div>
                     <div class="desc">${(b.description || "Tidak ada deskripsi.").slice(0,75)}...</div>
@@ -171,12 +184,14 @@ function triggerSearch() {
     searchBooks(q);
 }
 
-function openDetail(title, desc, thumb) {
-    window.location.href =
-        "detail.html?title=" + title +
-        "&description=" + desc +
-        "&thumbnail=" + thumb;
-}
+// Memulihkan pencarian setelah kembali
+window.onload = () => {
+    const last = localStorage.getItem("lastSearch");
+    if (last) {
+        document.getElementById("searchInput").value = last;
+        searchBooks(last);
+    }
+};
 </script>
 
 </body>
